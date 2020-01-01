@@ -9,8 +9,10 @@ from deap import tools
 import Calcudoku
 
 
+# This class represents a Calcudoku solver using GA"
 class Calcudoku_GA_Solver:
 
+    # The constructor of the class
     def __init__(self, board_size, constraints):
         self.board_size = board_size
         self.constraints = constraints
@@ -26,11 +28,11 @@ class Calcudoku_GA_Solver:
         self.toolbox.register("mutate", self.mut_shuffle)
         self.toolbox.register("select", tools.selTournament, tournsize=3)
 
-
-    """
-    This function will convert the array to a 2D table
-    """
-
+    # This function will solve the calcudoku with the given parameters:
+    # population - The size of the population
+    # generations - The number of generations until we stop the algorithm
+    # mutation_p - The probability for a mutation in an individual
+    # crossover_p - The probability for a crossover between two individuals
     def solve(self, population, generations, mutation_p, crossover_p):
 
         pop = self.toolbox.population(n=population)
@@ -50,10 +52,14 @@ class Calcudoku_GA_Solver:
 
         return pop, stats, hof
 
+    # The initialization operator - This function will create a board with the following features:
+    # Each row contains each number once
+    # Each column contains each number once
     def initiate_first_generation(self):
         board = self.random_creation(self.board_size)
         return Calcudoku.convert_to_array(board)
 
+    # This function will create a board where each row and col are permutation
     def random_creation(self, n):
         b = [None] * n
         b[0] = random.sample(range(1, n+1), n)
@@ -63,6 +69,8 @@ class Calcudoku_GA_Solver:
                 b[i] = random.sample(range(1, n+1), n)
         return b
 
+    # This function will check if in each column in the board there are only unique values.
+    # We will scan the column from row 0 to row "row_index"
     def valid_insertion(self, board, row_index):
         for i in range(len(board[0])):
             col_values = []
@@ -72,6 +80,7 @@ class Calcudoku_GA_Solver:
                 return False
         return True
 
+    # This function represents the mutation operator.
     def mut_shuffle(self, individual):
         board = Calcudoku.convert_to_table(individual)
         row_index = random.randrange(len(board))
@@ -87,6 +96,7 @@ class Calcudoku_GA_Solver:
             individual[index] = array[index]
         return individual,
 
+    # This function represents the crossover operator.
     def crossover(self, first_individual, second_individual):
         random_row_index = random.randrange(1, self.board_size - 1)
         index = random_row_index * self.board_size
@@ -94,10 +104,11 @@ class Calcudoku_GA_Solver:
         first_individual[index:], second_individual[index:] = second_individual[index:], first_individual[index:]
         return first_individual, second_individual
 
+    # This function represents the fitness function
     def evaluate_board(self, individual):
         return Calcudoku.count_all_duplicates(individual)[1]*self.board_size + Calcudoku.check_fault_constraints(individual, self.constraints),
 
-
+# The main
 def main():
     board_size = 4
     true_solution, constraints = Calcudoku.generate_board_in_size(board_size)

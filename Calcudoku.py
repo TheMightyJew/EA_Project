@@ -6,11 +6,12 @@ from calcudoku.game import Calcudoku
 def generate_board_in_size(board_size):
     game = Calcudoku.generate(board_size)
     board = convert_to_table(game.board)
-    #constraints = get_constraints(game.operations, game.partitions)
+    # constraints = get_constraints(game.operations, game.partitions)
     constraints = [('multiply', 32, [0, 9, 5, 1]), ('add', 5, [2, 6]), ('add', 9, [8, 4, 13, 12]), ('subtract', 1, [10, 14]), ('multiply', 24, [15, 11, 3, 7])]
     return board, constraints
 
 
+# This function will convert a given array to a table (2D array)
 def convert_to_table(array):
     table = []
     n = int((len(array)) ** 0.5)
@@ -89,10 +90,12 @@ def operator_divide(board, indexes_list):
     return maxNum / minNum
 
 
+# This function represents a "none" operator. This happens when there is only one cell in the constraint
 def operator_none(board, indexes_list):
     return board[indexes_list[0]]
 
 
+# This function will count the number of duplicates in a given list of numbers
 def count_duplicates(numbers_list):
     duplicates_count = 0
     num_set = []
@@ -104,6 +107,8 @@ def count_duplicates(numbers_list):
     return duplicates_count
 
 
+# This function will receive a board and will return the number of duplicates
+# In each row and in each column in the board
 def count_all_duplicates(board):
     size = int(len(board) ** 0.5)
     duplicates_count = 0
@@ -123,6 +128,7 @@ def count_all_duplicates(board):
     return duplicates_count, bad_rows + bad_columns
 
 
+# This function will return the number of fault constraints (constraints that are fulfilled)
 def check_fault_constraints(board, constraints):
     operators_dict = {'subtract': operator_sub, 'multiply': operator_mult, 'add': operator_sum,
                       'divide': operator_divide, 'none': operator_none}
