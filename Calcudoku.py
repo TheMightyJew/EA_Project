@@ -5,9 +5,11 @@ from calcudoku.game import Calcudoku
 # The function will return the solved board and its constraints
 def generate_board_in_size(board_size):
     game = Calcudoku.generate(board_size)
+    for partition in game.partitions:
+        partition.sort()
     board = convert_to_table(game.board)
-    # constraints = get_constraints(game.operations, game.partitions)
-    constraints = [('multiply', 32, [0, 9, 5, 1]), ('add', 5, [2, 6]), ('add', 9, [8, 4, 13, 12]), ('subtract', 1, [10, 14]), ('multiply', 24, [15, 11, 3, 7])]
+    constraints = get_constraints(game.operations, game.partitions)
+    #constraints = [('multiply', 32, [0, 1, 5, 9]), ('add', 5, [2, 6]), ('add', 9, [4, 8, 12, 13]), ('subtract', 1, [10, 14]), ('multiply', 24, [3, 7, 11, 15])]
     return board, constraints
 
 
@@ -49,14 +51,14 @@ def get_constraints(operations, partitions):
 
 # This function represents the sum operator
 def operator_sum(board, indexes_list):
-    sum = 0
+    total_sum = 0
     for index in indexes_list:
-        sum += board[index]
-    return sum
+        total_sum += board[index]
+    return total_sum
 
 
 # This function represents the multiplication operator
-def operator_mult(board, indexes_list):
+def operator_multiply(board, indexes_list):
     multiplication = 1
     for index in indexes_list:
         multiplication *= board[index]
@@ -65,29 +67,29 @@ def operator_mult(board, indexes_list):
 
 # This function returns the minimum and maximum numbers in a given list
 def get_min_max_by_indexes(board, indexes_list):
-    maxNum = None
-    minNum = None
+    max_num = None
+    min_num = None
     for index in indexes_list:
         value = board[index]
-        if maxNum == None or minNum == None:
-            minNum = value
-            maxNum = value
+        if max_num is None or min_num is None:
+            min_num = value
+            max_num = value
         else:
-            minNum = min(minNum, value)
-            maxNum = max(maxNum, value)
-    return minNum, maxNum
+            min_num = min(min_num, value)
+            max_num = max(max_num, value)
+    return min_num, max_num
 
 
 # This function represents the subtraction operator
 def operator_sub(board, indexes_list):
-    minNum, maxNum = get_min_max_by_indexes(board, indexes_list)
-    return maxNum - minNum
+    min_num, max_num = get_min_max_by_indexes(board, indexes_list)
+    return max_num - min_num
 
 
 # This function represents the division operator
 def operator_divide(board, indexes_list):
-    minNum, maxNum = get_min_max_by_indexes(board, indexes_list)
-    return maxNum / minNum
+    min_num, max_num = get_min_max_by_indexes(board, indexes_list)
+    return max_num / min_num
 
 
 # This function represents a "none" operator. This happens when there is only one cell in the constraint
@@ -128,12 +130,19 @@ def count_all_duplicates(board):
     return duplicates_count, bad_rows + bad_columns
 
 
+operators_dict = {'subtract': operator_sub, 'multiply': operator_multiply, 'add': operator_sum,
+                  'divide': operator_divide, 'none': operator_none}
+
+
 # This function will return the number of fault constraints (constraints that are fulfilled)
 def check_fault_constraints(board, constraints):
-    operators_dict = {'subtract': operator_sub, 'multiply': operator_mult, 'add': operator_sum,
-                      'divide': operator_divide, 'none': operator_none}
+    """
+    board = [4, 1, 2, 3, 3, 2, 1, 4, 2, 4, 3, 1, 1, 3, 4, 2]
+    print_board(convert_to_table(board))
+    """
     faults_num = 0
     for constraint in constraints:
         if constraint[1] != operators_dict[constraint[0]](board, constraint[2]):
-            faults_num += len(constraints[2])
+            #faults_num += len(constraint[2])
+            faults_num += 1
     return faults_num

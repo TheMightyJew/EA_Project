@@ -1,7 +1,7 @@
 import random
 import numpy
 import time
-
+import math
 from deap import algorithms
 from deap import base
 from deap import creator
@@ -61,6 +61,7 @@ class Calcudoku_GA_Solver:
 
     # This function will create a board where each row and col are permutation
     def random_creation(self, n):
+        # todo dont try to solve soduko
         b = [None] * n
         b[0] = random.sample(range(1, n+1), n)
         for i in range(1, n):
@@ -83,42 +84,98 @@ class Calcudoku_GA_Solver:
     # This function represents the mutation operator.
     def mut_shuffle(self, individual):
         board = Calcudoku.convert_to_table(individual)
-        row_index = random.randrange(len(board))
-        first_col_index = random.randrange(len(board[row_index]))
-        second_col_index = random.randrange(len(board[row_index]))
-        while first_col_index == second_col_index:
-            second_col_index = random.randrange(len(board[row_index]))
-        tmp = board[row_index][second_col_index]
-        board[row_index][second_col_index] = board[row_index][first_col_index]
-        board[row_index][first_col_index] = tmp
+        first_index = random.randrange(len(board))
+        #board = change_two_cells(board, first_index)
+        random_num = random.random()
+        if random_num < 0.5:
+            board = self.change_two_columns(board, first_index)
+        elif random_num < 0.1:
+            board = self.change_two_rows(board, first_index)
+        else:
+            second_index = random.randrange(len(board))
+            board[first_index][second_index] = self.generate_fake_num()
         array = Calcudoku.convert_to_array(board)
         for index in range(len(array)):
             individual[index] = array[index]
         return individual,
 
+    def is_fake_num(self, num):
+        return num < 0
+
+    def generate_fake_num(self):
+        return -(self.board_size + 1) * (1 + random.random())
+
+    def change_two_rows(self, board, first_index):
+        second_index = self.get_random(len(board), first_index)
+        tmp = board[second_index]
+        board[second_index] = board[first_index]
+        board[first_index] = tmp
+        return board
+
+    def change_two_columns(self, board, first_index):
+        second_index = self.get_random(len(board), first_index)
+        for index in range(len(board)):
+            tmp = board[index][second_index]
+            board[index][second_index] = board[index][first_index]
+            board[index][first_index] = tmp
+        return board
+
+    def change_two_cells(self, board, first_index):
+        first_col_index = random.randrange(len(board[first_index]))
+        second_col_index = random.randrange(len(board[first_index]))
+        while first_col_index == second_col_index:
+            second_col_index = random.randrange(len(board[first_index]))
+        tmp = board[first_index][second_col_index]
+        board[first_index][second_col_index] = board[first_index][first_col_index]
+        board[first_index][first_col_index] = tmp
+        return board
+
+    def get_random(self, num_range, first_index):
+        random_index = random.randrange(num_range)
+        while random_index == first_index:
+            random_index = random.randrange(num_range)
+        return random_index
+
     # This function represents the crossover operator.
     def crossover(self, first_individual, second_individual):
-        random_row_index = random.randrange(1, self.board_size - 1)
-        index = random_row_index * self.board_size
-        tmp = first_individual
-        first_individual[index:], second_individual[index:] = second_individual[index:], first_individual[index:]
+        random_index = random.randrange(1, self.board_size - 1)
+        index = random_index * self.board_size
+        if random.random() < 0.5:
+            first_board = Calcudoku.convert_to_table(first_individual)
+            second_board = Calcudoku.convert_to_table(second_individual)
+            for row_index in range(self.board_size):
+                for col_index in range(random_index, self.board_size):
+                    tmp = first_board[row_index][col_index]
+                    first_board[row_index][col_index] = second_board[row_index][col_index]
+                    second_board[row_index][col_index] = tmp
+            first_board = Calcudoku.convert_to_array(first_board)
+            second_board = Calcudoku.convert_to_array(second_board)
+            for i in range(len(first_board)):
+                first_individual[i] = first_board[i]
+                second_individual[i] = second_board[i]
+        else:
+            first_individual[index:], second_individual[index:] = second_individual[index:], first_individual[index:]
+
         return first_individual, second_individual
 
     # This function represents the fitness function
     def evaluate_board(self, individual):
-        return Calcudoku.count_all_duplicates(individual)[1]*self.board_size + Calcudoku.check_fault_constraints(individual, self.constraints),
+        return Calcudoku.count_all_duplicates(individual)[1] + Calcudoku.check_fault_constraints(individual, self.constraints),
+
 
 # The main
 def main():
-    board_size = 4
+    board_size = 6
     true_solution, constraints = Calcudoku.generate_board_in_size(board_size)
     solver = Calcudoku_GA_Solver(board_size, constraints)
-    pop, stats, hof = solver.solve(100, 500, 0.01, 0.7)
+    pop, stats, hof = solver.solve(100, 500, 0.2, 0.7)
+    print("Our Solution:")
     Calcudoku.print_board(Calcudoku.convert_to_table(hof[0]))
     print()
     Calcudoku.print_board(true_solution)
     print()
     print(constraints)
+
 
 if __name__ == "__main__":
     main()
