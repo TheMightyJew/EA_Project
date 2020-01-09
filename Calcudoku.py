@@ -50,17 +50,21 @@ def get_constraints(operations, partitions):
 
 
 # This function represents the sum operator
-def operator_sum(board, indexes_list):
+def operator_sum(board, indexes_list, answer):
     total_sum = 0
     for index in indexes_list:
+        if answer-board[index] < len(indexes_list)-1:
+            return -1
         total_sum += board[index]
     return total_sum
 
 
 # This function represents the multiplication operator
-def operator_multiply(board, indexes_list):
+def operator_multiply(board, indexes_list, answer):
     multiplication = 1
     for index in indexes_list:
+        if answer % board[index] != 0:
+            return -1
         multiplication *= board[index]
     return multiplication
 
@@ -81,20 +85,26 @@ def get_min_max_by_indexes(board, indexes_list):
 
 
 # This function represents the subtraction operator
-def operator_sub(board, indexes_list):
+def operator_sub(board, indexes_list, answer):
     min_num, max_num = get_min_max_by_indexes(board, indexes_list)
+    if max_num <= answer or min_num + answer > pow(len(board), 0.5):
+        return -1
     return max_num - min_num
 
 
 # This function represents the division operator
-def operator_divide(board, indexes_list):
+def operator_divide(board, indexes_list, answer):
     min_num, max_num = get_min_max_by_indexes(board, indexes_list)
+    if max_num % answer != 0 or answer * min_num > pow(len(board), 0.5):
+        return -1
     return max_num / min_num
 
 
 # This function represents a "none" operator. This happens when there is only one cell in the constraint
-def operator_none(board, indexes_list):
-    return board[indexes_list[0]]
+def operator_none(board, indexes_list, answer):
+    if board[indexes_list[0]] != answer:
+        return -1
+    return answer
 
 
 # This function will count the number of duplicates in a given list of numbers
@@ -140,9 +150,11 @@ def check_fault_constraints(board, constraints):
     board = [4, 1, 2, 3, 3, 2, 1, 4, 2, 4, 3, 1, 1, 3, 4, 2]
     print_board(convert_to_table(board))
     """
-    faults_num = 0
+    faults = 0
     for constraint in constraints:
-        if constraint[1] != operators_dict[constraint[0]](board, constraint[2]):
-            #faults_num += len(constraint[2])
-            faults_num += 1
-    return faults_num
+        calculation = operators_dict[constraint[0]](board, constraint[2], constraint[1])
+        if calculation == -1:
+            faults += len(constraints)
+        else:
+            faults += min(1, abs(constraint[1] - calculation))
+    return faults
