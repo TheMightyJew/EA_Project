@@ -1,4 +1,5 @@
 from calcudoku.game import Calcudoku
+import math
 
 
 # This function will generate a board in the given size
@@ -139,6 +140,71 @@ def count_all_duplicates(board):
         bad_columns += min(1, duplicates)
     return duplicates_count, bad_rows + bad_columns
 
+def partition_possible_values(partition_length, answer,operator, board_size):
+    operators_to_sign_dict = {'subtract': '-', 'multiply': '*', 'add': '+',
+                              'divide': '/', 'none': '0'}
+    op = operators_to_sign_dict[operator]
+    if op == '+':
+        arr = partition_possible_values_sum(partition_length,answer,board_size)
+    elif op =='-':
+        arr = partition_values_sub(answer,board_size)
+    elif op == '/':
+        arr = partition_values_div(answer,board_size)
+    elif op == '*': #*
+        arr = partition_possible_values_multi(partition_length,answer,board_size)
+    else: # None operator
+        arr = ["%s" % answer]
+
+    true_arr = []
+
+    for instance in arr:
+        split = instance.split(",")
+        val_arr = []
+        for val in split:
+            val_arr.append(int(val))
+        true_arr.append(val_arr)
+    return true_arr
+
+
+def partition_values_sub(answer, board_size):
+    array = []
+    for i in range(1,board_size-answer+1):
+        array.append("%s,%s" % (i,answer+i))
+    return array
+
+def partition_values_div(answer, board_size):
+    array = []
+    for i in range(1,int(board_size/answer)+1):
+        array.append("%s,%s" % (i,answer*i))
+    return array
+def partition_possible_values_sum(partition_length,answer, board_size):
+    return partition_possible_values_sum_rec(partition_length,answer,[],board_size,'',1)
+
+def partition_possible_values_sum_rec(partition_length,answer,array,board_size,so_far_string,last_num):
+    if partition_length == 1:
+        if answer > 0 and answer <= board_size and answer>= last_num:
+            array.append('%s%s' % (so_far_string,answer))
+            return array
+    else:
+        min_val = min(board_size,answer)
+        for i in range(last_num,min_val+1):
+            partition_possible_values_sum_rec(partition_length - 1, answer - i, array, board_size,'%s%s,' % (so_far_string,i),i)
+        return array
+
+def partition_possible_values_multi(partition_length,answer, board_size):
+    return partition_possible_values_multi_rec(partition_length,answer,[],board_size,'',1)
+
+def partition_possible_values_multi_rec(partition_length,answer,array,board_size,so_far_string,last_one):
+    if partition_length == 1:
+        if answer > 0 and answer <= board_size and answer >= last_one:
+            array.append('%s%s' % (so_far_string,answer))
+            return array
+    else:
+        min_val = min(board_size,answer)
+        for i in range(last_one,min_val+1):
+            if answer % i == 0:
+                partition_possible_values_multi_rec(partition_length - 1, int(answer / i), array, board_size,'%s%s,' % (so_far_string,i),i)
+        return array
 
 operators_dict = {'subtract': operator_sub, 'multiply': operator_multiply, 'add': operator_sum,
                   'divide': operator_divide, 'none': operator_none}
@@ -158,3 +224,18 @@ def check_fault_constraints(board, constraints):
         else:
             faults += min(1, abs(constraint[1] - calculation))
     return faults
+
+def main():
+    partition_length = 15
+    answer = 90
+    board_size = 9
+    """
+    operators_dict = {'subtract': operator_sub, 'multiply': operator_multiply, 'add': operator_sum,
+                  'divide': operator_divide, 'none': operator_none}
+    """
+    operator = 'add'
+    arr = partition_possible_values(partition_length,answer,operator,board_size)
+    for val in arr:
+        print(val)
+if __name__ == "__main__":
+    main()
