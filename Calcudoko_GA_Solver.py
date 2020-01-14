@@ -7,6 +7,11 @@ from deap import base
 from deap import creator
 from deap import tools
 import Calcudoku
+from Kcolor.Model.Graph import Graph
+from Kcolor.Model.Graph import Graph
+from Kcolor.Model.Graph import Graph
+from Kcolor.Model.Node import Node
+from Kcolor.Algorithms.GreedyColoring import GreedyColoring
 
 
 # This class represents a Calcudoku solver using GA"
@@ -16,6 +21,13 @@ class Calcudoku_GA_Solver:
     def __init__(self, board_size, constraints):
         self.board_size = board_size
         self.constraints = constraints
+        self.possible_assignment_structure,self.possible_assignment_vals = self.possible_assignment_partitions()
+
+        for i in range(len(self.constraints)):
+            print(self.constraints[i])
+            print(self.possible_assignment_structure[i])
+            print(self.possible_assignment_vals[i])
+            print()
 
         creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
         creator.create("Individual", list, fitness=creator.FitnessMin)
@@ -27,6 +39,45 @@ class Calcudoku_GA_Solver:
         self.toolbox.register("mate", self.crossover)
         self.toolbox.register("mutate", self.mut_shuffle)
         self.toolbox.register("select", tools.selTournament, tournsize=10)
+
+    def possible_assignment_partitions(self):
+        #constraints = [('multiply', 32, [0, 1, 5, 9]), ('add', 5, [2, 6]), ('add', 9, [4, 8, 12, 13]), ('subtract', 1, [10, 14]), ('multiply', 24, [3, 7, 11, 15])]
+        list_partition_to_possible_assignment_value = []
+        list_partition_to_possible_assignment_structure = []
+        for i in range(len(self.constraints)):
+            vals , structure = self.possible_assignment_for_partition(self.constraints[i])
+            list_partition_to_possible_assignment_value.append(vals)
+            list_partition_to_possible_assignment_structure.append(structure)
+        return  list_partition_to_possible_assignment_structure,list_partition_to_possible_assignment_value
+
+    def possible_assignment_for_partition(self,partition):
+        #('multiply', 32, [0, 1, 5, 9])
+        partition_list = []
+        for i in range(len(partition[2])):
+            x = int(partition[2][i] / self.board_size)
+            y = int(partition[2][i] % self.board_size)
+            partition_list.append((x,y))
+
+        graph = Graph(partition_list, self.board_size)
+
+        greedyColoring = GreedyColoring()
+        nodes_in_graph, solutions = greedyColoring.color_graph(graph, self.board_size)
+
+        possible = []
+        for solution in solutions:
+            dictionary_color_to_location = {}
+            for i in range(len(solution)):
+                node = nodes_in_graph[i]
+                x = int(node.get_id() / self.board_size)
+                y = int(node.get_id() % self.board_size)
+                if not solution[i] in dictionary_color_to_location:
+                    dictionary_color_to_location[solution[i]] = []
+                locations = dictionary_color_to_location[solution[i]]
+                locations.append((x, y))
+            possible.append(list(dictionary_color_to_location.values()))
+        possible_vals = Calcudoku.partition_possible_values(len(partition[2]),partition[1],partition[0],self.board_size,possible)
+        return possible_vals,solutions
+
 
     # This function will solve the calcudoku with the given parameters:
     # population - The size of the population
