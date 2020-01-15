@@ -10,7 +10,7 @@ def generate_board_in_size(board_size):
         partition.sort()
     board = convert_to_table(game.board)
     constraints = get_constraints(game.operations, game.partitions)
-    #constraints = [('multiply', 32, [0, 1, 5, 9]), ('add', 5, [2, 6]), ('add', 9, [4, 8, 12, 13]), ('subtract', 1, [10, 14]), ('multiply', 24, [3, 7, 11, 15])]
+    # constraints = [('multiply', 32, [0, 1, 5, 9]), ('add', 5, [2, 6]), ('add', 9, [4, 8, 12, 13]), ('subtract', 1, [10, 14]), ('multiply', 24, [3, 7, 11, 15])]
     return board, constraints
 
 
@@ -54,7 +54,7 @@ def get_constraints(operations, partitions):
 def operator_sum(board, indexes_list, answer):
     total_sum = 0
     for index in indexes_list:
-        if answer-board[index] < len(indexes_list)-1:
+        if answer - board[index] < len(indexes_list) - 1:
             return -1
         total_sum += board[index]
     return total_sum
@@ -140,21 +140,21 @@ def count_all_duplicates(board):
         bad_columns += min(1, duplicates)
     return duplicates_count, bad_rows + bad_columns
 
-def partition_possible_values(partition_length, answer,operator, board_size,possible_locations):
+
+def partition_possible_values(partition_length, answer, operator, board_size, possible_locations):
     operators_to_sign_dict = {'subtract': '-', 'multiply': '*', 'add': '+',
                               'divide': '/', 'none': '0'}
     op = operators_to_sign_dict[operator]
     if op == '+':
-        arr = partition_possible_values_sum(partition_length,answer,board_size,possible_locations)
-    elif op =='-':
-        arr = partition_values_sub(answer,board_size)
+        arr = partition_possible_values_sum(partition_length, answer, board_size, possible_locations)
+    elif op == '-':
+        arr = partition_values_sub(answer, board_size)
     elif op == '/':
-        arr = partition_values_div(answer,board_size)
-    elif op == '*': #*
-        arr = partition_possible_values_multi(partition_length,answer,board_size,possible_locations)
-    else: # None operator
+        arr = partition_values_div(answer, board_size)
+    elif op == '*':  # *
+        arr = partition_possible_values_multi(partition_length, answer, board_size, possible_locations)
+    else:  # None operator
         arr = ["%s" % answer]
-
 
     true_arr = {}
     for i in range(len(arr)):
@@ -172,61 +172,76 @@ def partition_possible_values(partition_length, answer,operator, board_size,poss
 
 def partition_values_sub(answer, board_size):
     array = []
-    for i in range(1,board_size-answer+1):
-        array.append("%s,%s" % (i,answer+i))
+    for i in range(1, board_size - answer + 1):
+        array.append("%s,%s" % (i, answer + i))
+        array.append("%s,%s" % (answer + i, i))
     return [array]
+
 
 def partition_values_div(answer, board_size):
     array = []
-    for i in range(1,int(board_size/answer)+1):
-        array.append("%s,%s" % (i,answer*i))
+    for i in range(1, int(board_size / answer) + 1):
+        array.append("%s,%s" % (i, answer * i))
+        array.append("%s,%s" % (answer * i, i))
     return [array]
-def partition_possible_values_sum(partition_length,answer, board_size,possible_locations):
+
+
+def partition_possible_values_sum(partition_length, answer, board_size, possible_locations):
     dictionary_assignment = []
     for i in range(len(possible_locations)):
         possible = possible_locations[i]
-        dictionary_assignment.append(partition_possible_values_sum_rec(partition_length,answer,[],board_size,'',possible,0))
+        dictionary_assignment.append(
+            partition_possible_values_sum_rec(partition_length, answer, [], board_size, '', possible, 0))
     return dictionary_assignment
 
-def partition_possible_values_sum_rec(partition_length,answer,array,board_size,so_far_string,possible,index_possible):
-    if partition_length == 0 and answer==0 and index_possible== len(possible): # success
+
+def partition_possible_values_sum_rec(partition_length, answer, array, board_size, so_far_string, possible,
+                                      index_possible):
+    if partition_length == 0 and answer == 0 and index_possible == len(possible):  # success
         toAppend = '%s' % so_far_string[:-1]
         split = toAppend.split(",")
         if len(set(split)) == len(split):
             array.append(toAppend)
         return array
-    if partition_length == 0 or answer <=0 or index_possible == len(possible): # fail
+    if partition_length == 0 or answer <= 0 or index_possible == len(possible):  # fail
         return array
     num_of_times = len(possible[index_possible])
-    min_val = min(board_size, int(answer/num_of_times))
-    for i in range(1,min_val+1):
-        partition_possible_values_sum_rec(partition_length-num_of_times,answer-num_of_times*i,array,board_size,'%s%s,' % (so_far_string,i),possible,index_possible+1)
+    min_val = min(board_size, int(answer / num_of_times))
+    for i in range(1, min_val + 1):
+        partition_possible_values_sum_rec(partition_length - num_of_times, answer - num_of_times * i, array, board_size,
+                                          '%s%s,' % (so_far_string, i), possible, index_possible + 1)
     return array
 
-def partition_possible_values_multi(partition_length,answer, board_size,possible_locations):
+
+def partition_possible_values_multi(partition_length, answer, board_size, possible_locations):
     dictionary_assignment = []
     for i in range(len(possible_locations)):
         possible = possible_locations[i]
-        dictionary_assignment.append( partition_possible_values_multi_rec(partition_length,answer,[],board_size,'',possible,0,False))
+        dictionary_assignment.append(
+            partition_possible_values_multi_rec(partition_length, answer, [], board_size, '', possible, 0, False))
     return dictionary_assignment
 
-def partition_possible_values_multi_rec(partition_length,answer,array,board_size,so_far_string,possible,index_possible,used_one):
-    if partition_length == 0 and answer==1 and index_possible== len(possible): # success
+
+def partition_possible_values_multi_rec(partition_length, answer, array, board_size, so_far_string, possible,
+                                        index_possible, used_one):
+    if partition_length == 0 and answer == 1 and index_possible == len(possible):  # success
         toAppend = '%s' % so_far_string[:-1]
         split = toAppend.split(",")
         if len(set(split)) == len(split):
             array.append(toAppend)
         return array
-    if partition_length == 0 or index_possible == len(possible): # fail
+    if partition_length == 0 or index_possible == len(possible):  # fail
         return array
     if answer == 1 and used_one:
         return array
     num_of_times = len(possible[index_possible])
-    min_val = min(board_size, int(answer ** (1/num_of_times)))
-    for i in range(1,min_val+1):
+    min_val = min(board_size, int(answer ** (1 / num_of_times)))
+    for i in range(1, min_val + 1):
         multi = i ** num_of_times
         if answer % multi == 0:
-            partition_possible_values_multi_rec(partition_length-num_of_times,answer/(i**num_of_times),array,board_size,'%s%s,' % (so_far_string,i),possible,index_possible+1,used_one or i==1)
+            partition_possible_values_multi_rec(partition_length - num_of_times, answer / (i ** num_of_times), array,
+                                                board_size, '%s%s,' % (so_far_string, i), possible, index_possible + 1,
+                                                used_one or i == 1)
     return array
 
 
@@ -236,10 +251,6 @@ operators_dict = {'subtract': operator_sub, 'multiply': operator_multiply, 'add'
 
 # This function will return the number of fault constraints (constraints that are fulfilled)
 def check_fault_constraints(board, constraints):
-    """
-    board = [4, 1, 2, 3, 3, 2, 1, 4, 2, 4, 3, 1, 1, 3, 4, 2]
-    print_board(convert_to_table(board))
-    """
     faults = 0
     for constraint in constraints:
         calculation = operators_dict[constraint[0]](board, constraint[2], constraint[1])
@@ -248,34 +259,3 @@ def check_fault_constraints(board, constraints):
         else:
             faults += min(1, abs(constraint[1] - calculation))
     return faults
-
-def main():
-    partition_length = 2
-    answer = 2
-    board_size = 8
-    """
-    * 0 * 
-    2 1 0 
-    * * * 
-    
-    * 0 * 
-    0 1 2 
-    * * * 
-    
-    [[[(0, 1), (1, 2)], [(1, 1)], [(1, 0)]], [[(0, 1), (1, 0)], [(1, 1)], [(1, 2)]]]
-    """
-    """
-    operators_dict = {'subtract': operator_sub, 'multiply': operator_multiply, 'add': operator_sum,
-                  'divide': operator_divide, 'none': operator_none}
-    """
-    possible = [[[(0, 1), (1, 2)], [(1, 1)], [(1, 0)]], [[(0, 1), (1, 0)], [(1, 1)], [(1, 2)]]]
-    operator = 'divide'
-    arr = partition_possible_values(partition_length,answer,operator,board_size,possible)
-    count = 0
-    for val in arr:
-        print(possible[count])
-        print(arr[val])
-        print()
-        count = count+1
-if __name__ == "__main__":
-    main()
