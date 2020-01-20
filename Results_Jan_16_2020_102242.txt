@@ -1,0 +1,11 @@
+Results on Calcudokus of size:8
+Time limit per run: 10 minutes
+
+
+Test 0:
+Constraints: [('divide', 8, [0, 8]), ('multiply', 48, [1, 9, 10, 18]), ('add', 22, [2, 3, 4, 11]), ('multiply', 105, [6, 7, 14, 15]), ('add', 13, [5, 12, 13]), ('add', 15, [16, 17, 24]), ('multiply', 1176, [21, 22, 29, 30]), ('subtract', 3, [23, 31]), ('subtract', 5, [25, 26]), ('add', 16, [19, 20, 27, 28]), ('multiply', 90, [32, 33, 40, 41]), ('subtract', 1, [35, 36]), ('divide', 3, [38, 39]), ('add', 14, [34, 42, 43, 50]), ('multiply', 35, [37, 44, 45]), ('add', 10, [51, 52, 53]), ('multiply', 120, [54, 62, 63]), ('add', 14, [46, 47, 55]), ('subtract', 3, [48, 56]), ('multiply', 336, [49, 57, 58, 59]), ('divide', 8, [60, 61])]
+Failed
+
+Successes: 0
+Fails: 1
+Average success run time : 0

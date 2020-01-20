@@ -1,7 +1,6 @@
 import random
 import numpy
 import time
-import math
 from deap import algorithms
 from deap import base
 from deap import creator
@@ -15,11 +14,8 @@ from Kcolor.Algorithms.GreedyColoring import GreedyColoring
 class Calcudoku_GA_Solver:
 
     # The constructor of the class
-    def __init__(self, board_size, constraints):
+    def __init__(self, board_size=6):
         self.board_size = board_size
-        self.constraints = constraints
-        self.possible_assignments = self.possible_assignment_partitions()
-
         creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
         creator.create("Individual", list, fitness=creator.FitnessMin)
         self.toolbox = base.Toolbox()
@@ -29,7 +25,11 @@ class Calcudoku_GA_Solver:
         self.toolbox.register("evaluate", self.evaluate_board)
         self.toolbox.register("mate", self.crossover)
         self.toolbox.register("mutate", self.mut_shuffle)
-        self.toolbox.register("select", tools.selTournament, tournsize=10)
+        self.toolbox.register("select", tools.selTournament, tournsize=5)
+
+    def set_constraints(self, constraints):
+        self.constraints = constraints
+        self.possible_assignments = self.possible_assignment_partitions()
 
     def possible_assignment_partitions(self):
         list_partition_to_possible_assignment_value = []
@@ -90,10 +90,13 @@ class Calcudoku_GA_Solver:
     # generations - The number of generations until we stop the algorithm
     # mutation_p - The probability for a mutation in an individual
     # crossover_p - The probability for a crossover between two individuals
-    def solve(self, population_size, generations, crossover_p, mutation_p, change_constraint_p, max_without_improvment):
+    def solve(self, population_size, generations, crossover_p, mutation_p, change_constraint_p, max_without_improvment,
+              max_time_per_run):
         self.change_constraint_p = change_constraint_p
         start_time = time.time();
         while True:
+            if time.time() - start_time > max_time_per_run:
+                break
             pop = self.toolbox.population(n=population_size)
             hof = tools.HallOfFame(1)
             stats = tools.Statistics(lambda ind: ind.fitness.values)
@@ -103,18 +106,14 @@ class Calcudoku_GA_Solver:
             stats.register("Worst", numpy.max)
             population, logbook = algorithms.eaSimple(pop, self.toolbox, cxpb=crossover_p, mutpb=mutation_p,
                                                       ngen=generations, max_without_improvment=max_without_improvment,
-                                                      stats=stats, halloffame=hof, verbose=True)
+                                                      stats=stats, halloffame=hof, verbose=False)
             if logbook[len(logbook) - 1]['Best'] == 0:
                 break
-
-            print("Our Failed Solution:")
-            Calcudoku.print_board(Calcudoku.convert_to_table(hof[0]))
-            print()
 
         elapsed_time = time.time() - start_time
         print('Total %.2f  seconds' % elapsed_time)
         print()
-        return pop, stats, hof
+        return pop, stats, hof, elapsed_time
 
     # The initialization operator - This function will create a board with the following features:
     # Each row contains each number once
@@ -199,7 +198,7 @@ class Calcudoku_GA_Solver:
                     for pair_location, pair_value in must_pairs.items():
                         if (pair_location % self.board_size == location % self.board_size or int(
                                 pair_location / self.board_size) == int(
-                                location / self.board_size)) and pair_location != location:
+                            location / self.board_size)) and pair_location != location:
                             if pair_value == assignment[index]:
                                 violates = True
                                 removed += 1
@@ -230,19 +229,47 @@ class Calcudoku_GA_Solver:
         return must_pairs
 
 
+def test(board_size=7, max_time_per_run=60 * 10, number_of_runs=10):
+    solver = Calcudoku_GA_Solver(board_size)
+    total_time = 0
+    counter = 0
+    timestamp = time.strftime('%b_%d_%Y_%H%M%S', time.localtime())
+    file = open("Results_" + str(timestamp) + ".txt", 'a')
+    file.write("Results on Calcudokus of size:" + str(board_size) + "\n")
+    file.write("Time limit per run: 10 minutes\n\n")
+    for i in range(number_of_runs):
+        true_solution, constraints = Calcudoku.generate_board_in_size(board_size)
+        file.write("\n")
+        file.write("Test " + str(i) + ":\n")
+        file.write("Constraints: " + str(constraints) + "\n")
+        print()
+        print("Run number " + str(i))
+        solver.set_constraints(constraints)
+        print(constraints)
+        print()
+        pop, stats, hof, elapsed_time = solver.solve(100, 500, 0.8, 1, 0.1, 30, max_time_per_run)
+        print(hof[0])
+        Calcudoku.print_board(Calcudoku.convert_to_table(hof[0]))
+        if elapsed_time < max_time_per_run:
+            counter += 1
+            total_time += elapsed_time
+            file.write("Success: " + str(round(elapsed_time, 2)) + " seconds\n")
+        else:
+            file.write("Failed\n")
+    if counter > 0:
+        average_time = round(total_time / counter, 2)
+    else:
+        average_time = 0
+    file.write("\n")
+    file.write("Successes: " + str(counter) + "\n")
+    file.write("Fails: " + str(number_of_runs - counter) + "\n")
+    file.write("Average success run time : " + str(average_time) + "\n")
+    file.close()
+
+
 # The main
 def main():
-    board_size = 8
-    true_solution, constraints = Calcudoku.generate_board_in_size(board_size)
-    solver = Calcudoku_GA_Solver(board_size, constraints)
-    print("Real Solution:")
-    Calcudoku.print_board(true_solution)
-    print()
-    print(constraints)
-    print()
-    pop, stats, hof = solver.solve(200, 500, 0.9, 1, 0.1, pow(board_size, 2))
-    print("Our Solution:")
-    Calcudoku.print_board(Calcudoku.convert_to_table(hof[0]))
+    test()
 
 
 if __name__ == "__main__":

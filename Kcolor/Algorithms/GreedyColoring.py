@@ -1,7 +1,3 @@
-from Kcolor.Model.Node import Node
-from Kcolor.Model.Graph import Graph
-
-
 class GreedyColoring:
 
     def is_valid(self, toColor, color):
