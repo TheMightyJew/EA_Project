@@ -1,5 +1,11 @@
+"""
+This class represents the Greedy Coloring algorithm
+"""
 class GreedyColoring:
 
+    """
+    can we color the given node with the given color
+    """
     def is_valid(self, toColor, color):
         neighbors = toColor.get_neighbors()
         for neigh in neighbors:
@@ -7,6 +13,9 @@ class GreedyColoring:
                 return False
         return True
 
+    """
+    This function will recursively find all the possibilities to paint the graph 
+    """
     def color_graph_rec(self, node_in_graph, k, index, solutions):
 
         if index == len(node_in_graph):
@@ -34,6 +43,9 @@ class GreedyColoring:
                 toColor.uncolor_node()
         return
 
+    """
+    This function will find all the possibilities to color the graph
+    """
     def color_graph(self, graph, k):
         nodes_in_graph = graph.get_nodes()
         solutions = []

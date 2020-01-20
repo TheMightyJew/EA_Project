@@ -1,8 +1,13 @@
 from Kcolor.Model.Node import Node
 
-
+"""
+This class represents a graph
+"""
 class Graph:
 
+    """
+    The constructor
+    """
     def __init__(self, partition, size):
         self.size = size
         self.id_to_node = {}
@@ -20,6 +25,9 @@ class Graph:
                     connected_with.add_neighbor(to_connect)
             connected.append(to_connect)
 
+    """
+    Will we connect the two nodes with an edge
+    """
     def to_connect(self, node1, node2):
         x1 = int(node1.get_id() / self.size)
         y1 = int(node1.get_id() % self.size)
@@ -27,5 +35,8 @@ class Graph:
         y2 = int(node2.get_id() % self.size)
         return x1 == x2 or y1 == y2
 
+    """
+    This function returns a list of all the nodes in the graph
+    """
     def get_nodes(self):
         return list(self.id_to_node.values())

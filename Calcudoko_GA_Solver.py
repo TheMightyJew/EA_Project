@@ -10,10 +10,14 @@ from Kcolor.Model.Graph import Graph
 from Kcolor.Algorithms.GreedyColoring import GreedyColoring
 
 
-# This class represents a Calcudoku solver using GA"
+"""
+ This class represents a Calcudoku solver using GA"
+"""
 class Calcudoku_GA_Solver:
 
-    # The constructor of the class
+    """
+    The constructor of the class
+    """
     def __init__(self, board_size=6):
         self.board_size = board_size
         creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
@@ -27,10 +31,17 @@ class Calcudoku_GA_Solver:
         self.toolbox.register("mutate", self.mut_shuffle)
         self.toolbox.register("select", tools.selTournament, tournsize=5)
 
+    """
+    This function constraints and generates the possible assignments for cages
+    """
     def set_constraints(self, constraints):
         self.constraints = constraints
         self.possible_assignments = self.possible_assignment_partitions()
 
+
+    """
+    This function returns all the possible assignments for the cages in the puzzle
+    """
     def possible_assignment_partitions(self):
         list_partition_to_possible_assignment_value = []
         list_partition_to_possible_assignment_structure = []
@@ -41,6 +52,9 @@ class Calcudoku_GA_Solver:
         return self.build_complete_possible_assignments(list_partition_to_possible_assignment_structure,
                                                         list_partition_to_possible_assignment_value)
 
+    """
+    This function recieves the possible structures and values for the cages and returns the complete assignments
+    """
     def build_complete_possible_assignments(self, possible_assignment_structure,
                                             possible_assignment_vals):
         complete_possible_assignments = []
@@ -56,8 +70,11 @@ class Calcudoku_GA_Solver:
             complete_possible_assignments.append(complete_assignment_for_structure_list)
         return self.fix(complete_possible_assignments)
 
+    """
+    This function receives a partition and returns all the possible assignments for it
+    """
     def possible_assignment_for_partition(self, partition):
-        # ('multiply', 32, [0, 1, 5, 9])
+
         partition_list = []
         for i in range(len(partition[2])):
             x = int(partition[2][i] / self.board_size)
@@ -65,10 +82,8 @@ class Calcudoku_GA_Solver:
             partition_list.append((x, y))
 
         graph = Graph(partition_list, self.board_size)
-
         greedyColoring = GreedyColoring()
         nodes_in_graph, solutions = greedyColoring.color_graph(graph, self.board_size)
-
         possible = []
         for solution in solutions:
             dictionary_color_to_location = {}
@@ -85,11 +100,13 @@ class Calcudoku_GA_Solver:
                                                             self.board_size, possible)
         return possible_vals, solutions
 
-    # This function will solve the calcudoku with the given parameters:
-    # population - The size of the population
-    # generations - The number of generations until we stop the algorithm
-    # mutation_p - The probability for a mutation in an individual
-    # crossover_p - The probability for a crossover between two individuals
+    """
+    This function will solve the calcudoku with the given parameters:
+    population - The size of the population
+    generations - The number of generations until we stop the algorithm
+    mutation_p - The probability for a mutation in an individual
+    crossover_p - The probability for a crossover between two individuals
+    """
     def solve(self, population_size, generations, crossover_p, mutation_p, change_constraint_p, max_without_improvment,
               max_time_per_run):
         self.change_constraint_p = change_constraint_p
@@ -114,15 +131,19 @@ class Calcudoku_GA_Solver:
         print('Total %.2f  seconds' % elapsed_time)
         print()
         return pop, stats, hof, elapsed_time
-
-    # The initialization operator - This function will create a board with the following features:
-    # Each row contains each number once
-    # Each column contains each number once
+    """
+     The initialization operator - This function will create a board with the following features:
+     Each row contains each number once
+     Each column contains each number once
+    """
     def initiate_first_generation(self):
         board = [0] * pow(self.board_size, 2)
         board = self.change_constraints_assignments(board, 1)
         return board
-
+    """
+    This function assigns a possible value for all partitions in the board
+    in the given probability
+    """
     def change_constraints_assignments(self, board, probability):
         for constraint_index in range(len(self.constraints)):
             if random.random() < probability:
@@ -132,12 +153,16 @@ class Calcudoku_GA_Solver:
                 for location_index in range(len(constraint[2])):
                     board[constraint[2][location_index]] = chosen_assignment[location_index]
         return board
-
-    # This function represents the mutation operator.
+    """
+    This function represents the mutation operator.
+    """
     def mut_shuffle(self, individual):
         self.change_constraints_assignments(individual, self.change_constraint_p)
         return individual,
 
+    """
+    This function will preform crossover between two partitions in two individuals
+    """
     def constraints_crossover(self, first_individual, second_individual):
         random_index = random.randrange(1, len(self.constraints) - 1)
         for i in range(random_index, len(self.constraints)):
@@ -147,36 +172,24 @@ class Calcudoku_GA_Solver:
                 second_individual[index] = tmp
         return first_individual, second_individual
 
-    def rows_columns_crossover(self, first_individual, second_individual):
-        random_index = random.randrange(1, self.board_size - 1)
-        index = random_index * self.board_size
-        if random.random() < 0.5:
-            first_board = Calcudoku.convert_to_table(first_individual)
-            second_board = Calcudoku.convert_to_table(second_individual)
-            for row_index in range(self.board_size):
-                for col_index in range(random_index, self.board_size):
-                    tmp = first_board[row_index][col_index]
-                    first_board[row_index][col_index] = second_board[row_index][col_index]
-                    second_board[row_index][col_index] = tmp
-            first_board = Calcudoku.convert_to_array(first_board)
-            second_board = Calcudoku.convert_to_array(second_board)
-            for i in range(len(first_board)):
-                first_individual[i] = first_board[i]
-                second_individual[i] = second_board[i]
-        else:
-            first_individual[index:], second_individual[index:] = second_individual[index:], first_individual[index:]
-        return first_individual, second_individual
 
-    # This function represents the crossover operator.
+    """
+    This function represents the crossover operator.
+    """
     def crossover(self, first_individual, second_individual):
         first_individual, second_individual = self.constraints_crossover(first_individual, second_individual)
         return first_individual, second_individual
 
-    # This function represents the fitness function
+
+    """
+    This function represents the fitness function
+    """
     def evaluate_board(self, individual):
-        # return Calcudoku.count_all_duplicates(individual)[1] + Calcudoku.check_fault_constraints(individual,self.constraints),
         return Calcudoku.count_all_duplicates(individual)[1],
 
+    """
+    Remove assignment that are conflicted with "must have pairs" values until there are no more
+    """
     def fix(self, complete_possible_assignments):
         removed = -1
         new_complete_possible_assignments = complete_possible_assignments
@@ -186,6 +199,9 @@ class Calcudoku_GA_Solver:
                 new_complete_possible_assignments, must_pairs)
         return new_complete_possible_assignments
 
+    """
+      Remove assignment that are conflicted with "must have pairs" values
+    """
     def remove_violating_assignments(self, old_complete_possible_assignments, must_pairs):
         removed = 0
         new_complete_possible_assignments = []
@@ -210,6 +226,9 @@ class Calcudoku_GA_Solver:
             new_complete_possible_assignments.append(new_constraint_assignments)
         return new_complete_possible_assignments, removed
 
+    """
+    This function finds all "must have pairs"
+    """
     def find_must_pairs(self, complete_possible_assignments):
         must_pairs = {}
         for constraint_index in range(len(self.constraints)):
@@ -228,7 +247,9 @@ class Calcudoku_GA_Solver:
                     must_pairs[self.constraints[constraint_index][2][index]] = last
         return must_pairs
 
-
+"""
+This function tests the GA model with the given parameterss
+"""
 def test(board_size=7, max_time_per_run=60 * 10, number_of_runs=10):
     solver = Calcudoku_GA_Solver(board_size)
     total_time = 0
@@ -267,7 +288,9 @@ def test(board_size=7, max_time_per_run=60 * 10, number_of_runs=10):
     file.close()
 
 
-# The main
+"""
+The main
+"""
 def main():
     test()
 
